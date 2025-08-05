@@ -13,30 +13,35 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Route kiểm tra server
+// ✅ Route GET kiểm tra server
 app.get("/", (req, res) => {
-  res.send("✅ Server Node.js Railway đã sẵn sàng nhận callback.");
+  res.send("✅ Server Railway hoạt động! Dùng POST để gửi callback từ Zalo Mini App.");
 });
 
-// ✅ Nhận callback từ Zalo Mini App
-app.post("/callback", (req, res) => {
+// ✅ Cho phép test cả POST / và POST /callback
+const handleCallback = (req, res) => {
   try {
     const data = req.body;
     const timestamp = new Date().toISOString();
     const orderId = Date.now().toString();
 
-    // ✅ Ghi log ra console (xem trên Railway Logs)
-    console.log(`📥 [${timestamp}] Callback nhận được:`, JSON.stringify(data, null, 2));
+    console.log(`📥 [${timestamp}] Đã nhận đơn hàng:`);
+    console.log(JSON.stringify(data, null, 2));
 
-    // ✅ Trả phản hồi đúng định dạng
-    res.status(200).json({ order_id: orderId });
+    // 👉 Bạn có thể xử lý thêm ở đây: gửi Telegram, lưu DB, gửi email...
+
+    res.status(200).json({ status: "received", order_id: orderId });
   } catch (err) {
     console.error("❌ Lỗi xử lý callback:", err);
     res.status(500).send("Internal Server Error");
   }
-});
+};
+
+// ✅ Nhận từ Zalo hoặc curl ở 2 đường dẫn
+app.post("/", handleCallback);
+app.post("/callback", handleCallback);
 
 // ✅ Bắt đầu server
 app.listen(port, () => {
-  console.log(`🚀 Server chạy tại: http://localhost:${port}`);
+  console.log(`🚀 Server chạy tại http://localhost:${port}`);
 });
